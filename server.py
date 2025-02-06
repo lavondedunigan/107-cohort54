@@ -1,7 +1,8 @@
 
-from flask import Flask, request
+from flask import Flask, request, render_template
 import json
 from http import HTTPStatus
+from config import db
 
 
 app = Flask("_name_")
@@ -28,25 +29,42 @@ def about():
     name={"name":"Vonda"}
     return json.dumps(name)
 
+@app.get("/about-me")
+def about_me():
+    user_name = "Vonda"
+    return render_template("about-me.html", name=user_name)
+
 
 products = []
 
+def fix_id(obj):
+    obj["_id"] = str(obj["_id"])
+    return obj
 
+# GET all products
 @app.get("/api/products")
 def get_products():
-    return json.dumps(products), HTTPStatus.OK
+    products_db = []
+    cursor = db.products.find({})
+    for product in cursor:
+        print("...product ", product)
+        products_db.append(fix_id(product))
+    return json.dumps(products_db), HTTPStatus.OK
 
+
+# POST a product
 @app.post("/api/products")
 def save_product():
     product = request.get_json()
     print(f"product {product}")
-    products.append(product)
+    #products.append(product)
+    db.products.insert_one(product)
     return "Product saved", 201
 
-# Put a product
+# PUT a product
 @app.put("/api/products/<int:index>")
 def update_product(index):
-    update_product = request.get_json()
+    updated_product = request.get_json()
     print(f"update the product with index {index}")
 
     
@@ -58,20 +76,18 @@ def update_product(index):
     
 
 # DELETE a product
-@app.delete("/api/products/<int:index")
+@app.delete("/api/products/<int:index>")
 def delete_product(index):
     print(f"delete the product with index {index}")
 
     if index >= 0 and index <len(products):
         deleted_product = products.pop(index)
-        return json.dumps(delete_product)
+        return json.dumps(deleted_product)
     else:
         return "That index does not exist"
 
 
-
-    return "Product deleted"
-
-
-
 app.run(debug=True)
+
+
+

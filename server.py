@@ -1,11 +1,12 @@
 
 from flask import Flask, request, render_template
 import json
-from http import HTTPStatus
 from config import db
+from flask_cors import CORS 
 
 
 app = Flask("_name_")
+CORS(app) # warning: this diables CORS policy
 
 @app.get("/")
 def home():
@@ -49,17 +50,56 @@ def get_products():
     for product in cursor:
         print("...product ", product)
         products_db.append(fix_id(product))
-    return json.dumps(products_db), HTTPStatus.OK
+    return json.dumps(products_db)
 
 
 # POST a product
 @app.post("/api/products")
 def save_product():
-    product = request.get_json()
-    print(f"product {product}")
-    #products.append(product)
-    db.products.insert_one(product)
-    return "Product saved", 201
+    item = request.get_json
+    db.Products.insert_one(item)
+    return json.dumps(fix_id(item))
+
+
+
+
+###################################################
+############## COUPON CODES #######################
+###################################################
+
+
+
+# post /api/coupons
+# db.coupons
+@app.post("/api/coupons")
+def save_coupon():
+    item = request.get_json()
+    db.coupons.insert_one(item)
+    return json.dumps(fix_id(item))
+
+
+
+# get /api/coupons
+@app.get("/api/coupons")
+def get_coupon():
+    all_coupons = []
+    cursor = db.coupons.find({})
+    for cp in cursor:
+        all_coupons.append(fix_id(cp))
+
+    return json.dumps(all_coupons)
+         
+
+
+
+# coupon:
+
+
+# code:
+
+
+# 
+     
 
 # PUT a product
 @app.put("/api/products/<int:index>")
